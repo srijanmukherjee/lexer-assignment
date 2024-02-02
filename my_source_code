@@ -1,3 +1,6 @@
+"this is a string literal"
+'also supports single quoted string literal'
+
 54e0
 do
 hello

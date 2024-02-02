@@ -212,6 +212,27 @@ Token get_token(Lexer *lexer) {
         ungetc(c, lexer->source);
     }
 
+    if (lexer->last_char == '"' || lexer->last_char == '\'') {
+        char string_literal_start = lexer->last_char;
+        String str = new_string();
+        next_char(lexer);
+        while (lexer->last_char != EOF && lexer->last_char != string_literal_start) {
+            string_append_char(str, lexer->last_char);
+            next_char(lexer);
+        }
+
+        if (lexer->last_char != string_literal_start) {
+            report_error(lexer, "Unterminated string");
+            return (Token){TOK_ERROR};
+        }
+
+        const char *s = string_c_str(str);
+        free_string(str);
+        next_char(lexer);
+
+        return (Token){TOK_STRING_LITERAL, st_insert(lexer->st, s)};
+    }
+
     if (lexer->last_char == EOF) {
         return (Token){TOK_EOF};
     }

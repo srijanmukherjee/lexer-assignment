@@ -80,6 +80,8 @@ const char *tok_to_str(TokenType tok) {
             return "TOK_KEYWORD_VOLATILE";
         case TOK_KEYWORD_WHILE:
             return "TOK_KEYWORD_WHILE";
+        case TOK_STRING_LITERAL:
+            return "TOK_STRING_LITERAL";
         default:
             return "<unknown>";
     }
@@ -129,7 +131,7 @@ int main(int argc, const char *argv[]) {
 
         printf("%s", tok_to_str(token.type));
 
-        if (token.type == TOK_IDENTIFIER) {
+        if (token.type == TOK_IDENTIFIER || token.type == TOK_STRING_LITERAL) {
             printf(": %s", st_get(lexer->st, token.value));
         }
 

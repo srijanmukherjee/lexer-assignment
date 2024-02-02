@@ -70,7 +70,10 @@ typedef enum {
     TOK_KEYWORD_UNSIGNED,
     TOK_KEYWORD_VOID,
     TOK_KEYWORD_VOLATILE,
-    TOK_KEYWORD_WHILE
+    TOK_KEYWORD_WHILE,
+
+    // Literals
+    TOK_STRING_LITERAL
 } TokenType;
 
 typedef enum { RELOP_LT, RELOP_GT, RELOP_EQ, RELOP_LE, RELOP_GE, RELOP_NE } RelOp;
