@@ -1,4 +1,6 @@
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "lexer.h"
 
@@ -109,6 +111,10 @@ int main(int argc, const char *argv[]) {
     }
 
     Lexer *lexer = create_lexer(argv[1]);
+    if (lexer == NULL) {
+        fprintf(stderr, "%s: %s\n", argv[1], strerror(errno));
+        return 1;
+    }
 
     while (1) {
         Token token = get_token(lexer);
