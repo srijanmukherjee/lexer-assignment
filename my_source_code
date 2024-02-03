@@ -30,3 +30,8 @@ if (z == 10 && a > 5) {
 for (int i = 0; i < 10; i++) {
     printf("Hello world");
 }
+
+// this is a single line comment
+void print(int a) { // inline comment
+    printf(a);
+}

@@ -256,6 +256,13 @@ Token get_token(Lexer *lexer) {
 
     if (lexer->last_char == '/') {
         next_char(lexer);
+        // comment
+        if (lexer->last_char == '/') {
+            do {
+                next_char(lexer);
+            } while (lexer->last_char != '\n' && lexer->last_char != EOF);
+            return get_token(lexer);
+        }
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DIV};
     }
 
