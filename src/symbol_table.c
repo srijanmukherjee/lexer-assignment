@@ -1,6 +1,7 @@
 #include "symbol_table.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 ST *st_create() {
     ST *st = malloc(sizeof(ST));
@@ -11,6 +12,12 @@ ST *st_create() {
 }
 
 size_t st_insert(ST *st, const char *value) {
+    for (int i = 0; i < st->n; i++) {
+        if (strcmp(st->entries[i], value) == 0) {
+            return i;
+        }
+    }
+
     if (st->n == st->capacity) {
         st->capacity += 8;
         st->entries = realloc(st->entries, sizeof(char *) * st->capacity);

@@ -194,7 +194,7 @@ int main(int argc, const char *argv[]) {
         printf("%s", tok_to_str(token.type));
 
         if (token.type == TOK_IDENTIFIER || token.type == TOK_STRING_LITERAL) {
-            printf(": %s", st_get(lexer->st, token.value));
+            printf(": (%d) %s", token.value, st_get(lexer->st, token.value));
         }
 
         if (token.type == TOK_INT) {
