@@ -88,8 +88,11 @@ typedef enum {
     // Operators
     TOK_ARITHMETIC_OPERATOR,
     TOK_LOGICAL_OPERATOR,
+
+    // Misc
     TOK_EQUAL,
-    TOK_COLON
+    TOK_COLON,
+    TOK_COMMA
 } TokenType;
 
 typedef enum { RELOP_LT, RELOP_GT, RELOP_EQ, RELOP_LE, RELOP_GE, RELOP_NE } RelOp;

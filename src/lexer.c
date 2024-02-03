@@ -332,6 +332,11 @@ Token get_token(Lexer *lexer) {
         return (Token){TOK_COLON};
     }
 
+    if (lexer->last_char == ',') {
+        next_char(lexer);
+        return (Token){TOK_COMMA};
+    }
+
     if (lexer->last_char == EOF) {
         return (Token){TOK_EOF};
     }

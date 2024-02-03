@@ -106,6 +106,8 @@ const char *tok_to_str(TokenType tok) {
             return "TOK_EQUAL";
         case TOK_COLON:
             return "TOK_COLON";
+        case TOK_COMMA:
+            return "TOK_COMMA";
         default:
             return "<unknown>";
     }
