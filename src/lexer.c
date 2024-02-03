@@ -202,14 +202,12 @@ Token get_token(Lexer *lexer) {
     }
 
     if (lexer->last_char == '=') {
-        char c = fgetc(lexer->source);
-        if (c == '=') {
-            ungetc('=', lexer->source);
-            next_char(lexer);
+        next_char(lexer);
+        if (lexer->last_char == '=') {
             next_char(lexer);
             return (Token){TOK_RELOP, RELOP_EQ};
         }
-        ungetc(c, lexer->source);
+        return (Token){TOK_EQUAL};
     }
 
     if (lexer->last_char == '"' || lexer->last_char == '\'') {
@@ -231,6 +229,100 @@ Token get_token(Lexer *lexer) {
         next_char(lexer);
 
         return (Token){TOK_STRING_LITERAL, st_insert(lexer->st, s)};
+    }
+
+    if (lexer->last_char == '+') {
+        next_char(lexer);
+        if (lexer->last_char == '+') {
+            next_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_PLUS};
+        }
+        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_PLUS};
+    }
+
+    if (lexer->last_char == '-') {
+        next_char(lexer);
+        if (lexer->last_char == '-') {
+            next_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_MINUS};
+        }
+        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MINUS};
+    }
+
+    if (lexer->last_char == '%') {
+        next_char(lexer);
+        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MOD};
+    }
+
+    if (lexer->last_char == '/') {
+        next_char(lexer);
+        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DIV};
+    }
+
+    if (lexer->last_char == '*') {
+        next_char(lexer);
+        if (lexer->last_char == '*') {
+            next_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_EXP};
+        }
+        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MUL};
+    }
+
+    if (lexer->last_char == '(') {
+        next_char(lexer);
+        return (Token){TOK_L_PARAN};
+    }
+
+    if (lexer->last_char == ')') {
+        next_char(lexer);
+        return (Token){TOK_R_PARAN};
+    }
+
+    if (lexer->last_char == '[') {
+        next_char(lexer);
+        return (Token){TOK_L_SQUARE_BRACKET};
+    }
+
+    if (lexer->last_char == ']') {
+        next_char(lexer);
+        return (Token){TOK_R_SQUARE_BRACKET};
+    }
+
+    if (lexer->last_char == '{') {
+        next_char(lexer);
+        return (Token){TOK_L_BRACE};
+    }
+
+    if (lexer->last_char == '}') {
+        next_char(lexer);
+        return (Token){TOK_R_BRACE};
+    }
+
+    // Logical operators
+    if (lexer->last_char == '&') {
+        next_char(lexer);
+        if (lexer->last_char == '&') {
+            next_char(lexer);
+            return (Token){TOK_LOGICAL_OPERATOR, L_OP_AND};
+        }
+    }
+
+    if (lexer->last_char == '|') {
+        next_char(lexer);
+        if (lexer->last_char == '|') {
+            next_char(lexer);
+            return (Token){TOK_LOGICAL_OPERATOR, L_OP_OR};
+        }
+    }
+
+    if (lexer->last_char == '!') {
+        next_char(lexer);
+        return (Token){TOK_LOGICAL_OPERATOR, L_OP_NOT};
+    }
+
+    if (lexer->last_char == ';') {
+        next_char(lexer);
+        return (Token){TOK_COLON};
     }
 
     if (lexer->last_char == EOF) {

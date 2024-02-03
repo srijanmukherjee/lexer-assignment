@@ -73,10 +73,39 @@ typedef enum {
     TOK_KEYWORD_WHILE,
 
     // Literals
-    TOK_STRING_LITERAL
+    TOK_STRING_LITERAL,
+
+    // Symbols
+    TOK_R_BRACE,
+    TOK_L_BRACE,
+    TOK_R_PARAN,
+    TOK_L_PARAN,
+    TOK_R_SQUARE_BRACKET,
+    TOK_L_SQUARE_BRACKET,
+    TOK_R_ANGLE_BRACKET,
+    TOK_L_ANGLE_BRACKET,
+
+    // Operators
+    TOK_ARITHMETIC_OPERATOR,
+    TOK_LOGICAL_OPERATOR,
+    TOK_EQUAL,
+    TOK_COLON
 } TokenType;
 
 typedef enum { RELOP_LT, RELOP_GT, RELOP_EQ, RELOP_LE, RELOP_GE, RELOP_NE } RelOp;
+
+typedef enum {
+    A_OP_PLUS,
+    A_OP_MINUS,
+    A_OP_DIV,
+    A_OP_MUL,
+    A_OP_EXP,
+    A_OP_MOD,
+    A_OP_DOUBLE_PLUS,
+    A_OP_DOUBLE_MINUS
+} ArithmeticOperator;
+
+typedef enum { L_OP_AND, L_OP_OR, L_OP_NOT } LogicalOperator;
 
 typedef struct {
     TokenType type;

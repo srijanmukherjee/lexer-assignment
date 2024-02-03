@@ -82,6 +82,66 @@ const char *tok_to_str(TokenType tok) {
             return "TOK_KEYWORD_WHILE";
         case TOK_STRING_LITERAL:
             return "TOK_STRING_LITERAL";
+        case TOK_ARITHMETIC_OPERATOR:
+            return "TOK_ARITHMETIC_OPERATOR";
+        case TOK_R_BRACE:
+            return "TOK_R_BRACE";
+        case TOK_L_BRACE:
+            return "TOK_L_BRACE";
+        case TOK_R_PARAN:
+            return "TOK_R_PARAN";
+        case TOK_L_PARAN:
+            return "TOK_L_PARAN";
+        case TOK_R_SQUARE_BRACKET:
+            return "TOK_R_SQUARE_BRACKET";
+        case TOK_L_SQUARE_BRACKET:
+            return "TOK_L_SQUARE_BRACKET";
+        case TOK_R_ANGLE_BRACKET:
+            return "TOK_R_ANGLE_BRACKET";
+        case TOK_L_ANGLE_BRACKET:
+            return "TOK_L_ANGLE_BRACKET";
+        case TOK_LOGICAL_OPERATOR:
+            return "TOK_LOGICAL_OPERATOR";
+        case TOK_EQUAL:
+            return "TOK_EQUAL";
+        case TOK_COLON:
+            return "TOK_COLON";
+        default:
+            return "<unknown>";
+    }
+}
+
+const char *arithmetic_op_to_str(ArithmeticOperator op) {
+    switch (op) {
+        case A_OP_PLUS:
+            return "A_OP_PLUS";
+        case A_OP_MINUS:
+            return "A_OP_MINUS";
+        case A_OP_DIV:
+            return "A_OP_DIV";
+        case A_OP_MUL:
+            return "A_OP_MUL";
+        case A_OP_EXP:
+            return "A_OP_EXP";
+        case A_OP_MOD:
+            return "A_OP_MOD";
+        case A_OP_DOUBLE_PLUS:
+            return "A_OP_DOUBLE_PLUS";
+        case A_OP_DOUBLE_MINUS:
+            return "A_OP_DOUBLE_MINUS";
+        default:
+            return "<unknown>";
+    }
+}
+
+const char *logical_op_to_str(LogicalOperator op) {
+    switch (op) {
+        case L_OP_AND:
+            return "L_OP_AND";
+        case L_OP_OR:
+            return "L_OP_OR";
+        case L_OP_NOT:
+            return "L_OP_NOT";
         default:
             return "<unknown>";
     }
@@ -145,6 +205,10 @@ int main(int argc, const char *argv[]) {
 
         if (token.type == TOK_RELOP) {
             printf(": %s", relop_to_str(token.value));
+        }
+
+        if (token.type == TOK_ARITHMETIC_OPERATOR) {
+            printf(": %s", arithmetic_op_to_str(token.value));
         }
 
         printf("\n");
