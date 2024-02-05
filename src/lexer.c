@@ -62,6 +62,9 @@ Lexer *create_lexer(const char *filepath) {
 
     lexer->col = -1;
     lexer->row = 1;
+    lexer->prev_col = lexer->row;
+    lexer->prev_col = lexer->col;
+    lexer->is_error = false;
     lexer->filepath = filepath;
     lexer->source = file;
     lexer->last_char = ' ';
@@ -72,12 +75,22 @@ Lexer *create_lexer(const char *filepath) {
 static bool isdelim(uint8_t c) { return isspace(c) || c == '\t' || c == '\r' || c == '\n'; }
 
 static void next_char(Lexer *lexer) {
+    lexer->prev_row = lexer->row;
+    lexer->prev_col = lexer->col;
+
     lexer->col++;
     lexer->last_char = fgetc(lexer->source);
     if (lexer->last_char == '\n') {
         lexer->row++;
         lexer->col = 1;
     }
+}
+
+// Can go back only once
+static void prev_char(Lexer *lexer) {
+    ungetc(lexer->last_char, lexer->source);
+    lexer->col = lexer->prev_col;
+    lexer->row = lexer->prev_row;
 }
 
 static void report_error(Lexer *lexer, const char *format, ...) {
@@ -97,6 +110,7 @@ static Token process_number(Lexer *lexer) {
     } while (isdigit(lexer->last_char));
 
     if (lexer->last_char != '.' && tolower(lexer->last_char) != 'e') {
+        prev_char(lexer);
         lexer->val_int = strtol(str->buf, NULL, 10);
         free_string(str);
         return (Token){TOK_INT};
@@ -108,6 +122,7 @@ static Token process_number(Lexer *lexer) {
         string_append_char(str, lexer->last_char);
         next_char(lexer);
     } while (isdigit(lexer->last_char));
+    prev_char(lexer);
 
     if (tolower(lexer->last_char) != 'e') {
         lexer->val_double = strtod(str->buf, NULL);
@@ -132,6 +147,7 @@ scientific:
         string_append_char(str, lexer->last_char);
         next_char(lexer);
     } while (isdigit(lexer->last_char));
+    prev_char(lexer);
 
     // ERROR: nothing after e[+-]
     if (digit_count == 0 || lexer->last_char == '.') {
@@ -146,6 +162,12 @@ scientific:
 }
 
 Token get_token(Lexer *lexer) {
+    if (lexer == NULL || lexer->is_error) {
+        return (Token){TOK_ERROR};
+    }
+
+    next_char(lexer);
+
     // skip delimeters
     while (isdelim(lexer->last_char)) next_char(lexer);
 
@@ -157,6 +179,7 @@ Token get_token(Lexer *lexer) {
             string_append_char(str, lexer->last_char);
             next_char(lexer);
         } while (isalnum(lexer->last_char) || lexer->last_char == '_');
+        prev_char(lexer);
 
         // get c string
         // basically trims the extra preallocated portion from the String
@@ -177,36 +200,39 @@ Token get_token(Lexer *lexer) {
 
     // number -> int + float + scientific
     if (isdigit(lexer->last_char) || lexer->last_char == '.') {
-        return process_number(lexer);
+        Token result = process_number(lexer);
+        if (result.type == TOK_ERROR) {
+            lexer->is_error = true;
+        }
+        return result;
     }
 
     if (lexer->last_char == '>') {
         next_char(lexer);
         if (lexer->last_char == '=') {
-            next_char(lexer);
             return (Token){TOK_RELOP, RELOP_GE};
         }
+        prev_char(lexer);
         return (Token){TOK_RELOP, RELOP_GT};
     }
 
     if (lexer->last_char == '<') {
         next_char(lexer);
         if (lexer->last_char == '=') {
-            next_char(lexer);
             return (Token){TOK_RELOP, RELOP_LE};
         } else if (lexer->last_char == '>') {
-            next_char(lexer);
             return (Token){TOK_RELOP, RELOP_NE};
         }
+        prev_char(lexer);
         return (Token){TOK_RELOP, RELOP_LT};
     }
 
     if (lexer->last_char == '=') {
         next_char(lexer);
         if (lexer->last_char == '=') {
-            next_char(lexer);
             return (Token){TOK_RELOP, RELOP_EQ};
         }
+        prev_char(lexer);
         return (Token){TOK_EQUAL};
     }
 
@@ -221,12 +247,12 @@ Token get_token(Lexer *lexer) {
 
         if (lexer->last_char != string_literal_start) {
             report_error(lexer, "Unterminated string");
+            lexer->is_error = true;
             return (Token){TOK_ERROR};
         }
 
         const char *s = string_c_str(str);
         free_string(str);
-        next_char(lexer);
 
         return (Token){TOK_STRING_LITERAL, st_insert(lexer->st, s)};
     }
@@ -234,23 +260,22 @@ Token get_token(Lexer *lexer) {
     if (lexer->last_char == '+') {
         next_char(lexer);
         if (lexer->last_char == '+') {
-            next_char(lexer);
             return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_PLUS};
         }
+        prev_char(lexer);
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_PLUS};
     }
 
     if (lexer->last_char == '-') {
         next_char(lexer);
         if (lexer->last_char == '-') {
-            next_char(lexer);
             return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_MINUS};
         }
+        prev_char(lexer);
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MINUS};
     }
 
     if (lexer->last_char == '%') {
-        next_char(lexer);
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MOD};
     }
 
@@ -263,45 +288,40 @@ Token get_token(Lexer *lexer) {
             } while (lexer->last_char != '\n' && lexer->last_char != EOF);
             return get_token(lexer);
         }
+        prev_char(lexer);
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DIV};
     }
 
     if (lexer->last_char == '*') {
         next_char(lexer);
         if (lexer->last_char == '*') {
-            next_char(lexer);
             return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_EXP};
         }
+        prev_char(lexer);
         return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MUL};
     }
 
     if (lexer->last_char == '(') {
-        next_char(lexer);
         return (Token){TOK_L_PARAN};
     }
 
     if (lexer->last_char == ')') {
-        next_char(lexer);
         return (Token){TOK_R_PARAN};
     }
 
     if (lexer->last_char == '[') {
-        next_char(lexer);
         return (Token){TOK_L_SQUARE_BRACKET};
     }
 
     if (lexer->last_char == ']') {
-        next_char(lexer);
         return (Token){TOK_R_SQUARE_BRACKET};
     }
 
     if (lexer->last_char == '{') {
-        next_char(lexer);
         return (Token){TOK_L_BRACE};
     }
 
     if (lexer->last_char == '}') {
-        next_char(lexer);
         return (Token){TOK_R_BRACE};
     }
 
@@ -309,31 +329,32 @@ Token get_token(Lexer *lexer) {
     if (lexer->last_char == '&') {
         next_char(lexer);
         if (lexer->last_char == '&') {
-            next_char(lexer);
             return (Token){TOK_LOGICAL_OPERATOR, L_OP_AND};
         }
+        prev_char(lexer);
     }
 
     if (lexer->last_char == '|') {
         next_char(lexer);
         if (lexer->last_char == '|') {
-            next_char(lexer);
             return (Token){TOK_LOGICAL_OPERATOR, L_OP_OR};
         }
+        prev_char(lexer);
     }
 
     if (lexer->last_char == '!') {
-        next_char(lexer);
         return (Token){TOK_LOGICAL_OPERATOR, L_OP_NOT};
     }
 
     if (lexer->last_char == ';') {
-        next_char(lexer);
+        return (Token){TOK_SEMI_COLON};
+    }
+
+    if (lexer->last_char == ':') {
         return (Token){TOK_COLON};
     }
 
     if (lexer->last_char == ',') {
-        next_char(lexer);
         return (Token){TOK_COMMA};
     }
 
@@ -341,6 +362,7 @@ Token get_token(Lexer *lexer) {
         return (Token){TOK_EOF};
     }
 
+    lexer->is_error = true;
     report_error(lexer, "Unrecognised token '%c'", lexer->last_char);
     return (Token){TOK_ERROR};
 }

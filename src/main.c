@@ -104,6 +104,8 @@ const char *tok_to_str(TokenType tok) {
             return "TOK_LOGICAL_OPERATOR";
         case TOK_EQUAL:
             return "TOK_EQUAL";
+        case TOK_SEMI_COLON:
+            return "TOK_SEMI_COLON";
         case TOK_COLON:
             return "TOK_COLON";
         case TOK_COMMA:

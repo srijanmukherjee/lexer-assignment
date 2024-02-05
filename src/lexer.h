@@ -2,6 +2,7 @@
 #define __LEXER_H__
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -15,7 +16,10 @@ typedef struct {
     ST *st;
     int row;
     int col;
+    int prev_row;
+    int prev_col;
     char last_char;
+    bool is_error;
     // for both scientific and double/float values
     double val_double;
     int val_int;
@@ -91,6 +95,7 @@ typedef enum {
 
     // Misc
     TOK_EQUAL,
+    TOK_SEMI_COLON,
     TOK_COLON,
     TOK_COMMA
 } TokenType;
