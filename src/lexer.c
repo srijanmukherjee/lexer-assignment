@@ -60,7 +60,7 @@ Lexer *create_lexer(const char *filepath) {
         return NULL;
     }
 
-    lexer->col = -1;
+    lexer->col = 0;
     lexer->row = 1;
     lexer->prev_col = lexer->row;
     lexer->prev_col = lexer->col;
@@ -82,7 +82,7 @@ static void next_char(Lexer *lexer) {
     lexer->last_char = fgetc(lexer->source);
     if (lexer->last_char == '\n') {
         lexer->row++;
-        lexer->col = 1;
+        lexer->col = 0;
     }
 }
 
@@ -116,14 +116,22 @@ static Token process_number(Lexer *lexer) {
         return (Token){TOK_INT};
     }
 
+    // e after int part
     if (tolower(lexer->last_char) == 'e') goto scientific;
 
+    // read digits after dot(.)
     do {
         string_append_char(str, lexer->last_char);
         next_char(lexer);
     } while (isdigit(lexer->last_char));
-    prev_char(lexer);
 
+    // only dot(.)
+    if (str->n - 1 == 0) {
+        free_string(str);
+        return (Token){TOK_ERROR};
+    }
+
+    prev_char(lexer);
     if (tolower(lexer->last_char) != 'e') {
         lexer->val_double = strtod(str->buf, NULL);
         free_string(str);
@@ -200,11 +208,23 @@ Token get_token(Lexer *lexer) {
 
     // number -> int + float + scientific
     if (isdigit(lexer->last_char) || lexer->last_char == '.') {
-        Token result = process_number(lexer);
-        if (result.type == TOK_ERROR) {
-            lexer->is_error = true;
+        bool parse_number = true;
+        if (lexer->last_char == '.') {
+            // TODO: fgetc shouldn't be called directly
+            char c = fgetc(lexer->source);
+            // this means this is just a dot
+            if (!isdigit(c)) {
+                parse_number = false;
+            }
+            ungetc(c, lexer->source);
         }
-        return result;
+        if (parse_number) {
+            Token result = process_number(lexer);
+            if (result.type == TOK_ERROR) {
+                lexer->is_error = true;
+            }
+            return result;
+        }
     }
 
     if (lexer->last_char == '>') {
@@ -356,6 +376,10 @@ Token get_token(Lexer *lexer) {
 
     if (lexer->last_char == ',') {
         return (Token){TOK_COMMA};
+    }
+
+    if (lexer->last_char == '.') {
+        return (Token){TOK_DOT};
     }
 
     if (lexer->last_char == EOF) {

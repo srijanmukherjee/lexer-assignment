@@ -97,7 +97,8 @@ typedef enum {
     TOK_EQUAL,
     TOK_SEMI_COLON,
     TOK_COLON,
-    TOK_COMMA
+    TOK_COMMA,
+    TOK_DOT
 } TokenType;
 
 typedef enum { RELOP_LT, RELOP_GT, RELOP_EQ, RELOP_LE, RELOP_GE, RELOP_NE } RelOp;
