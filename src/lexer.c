@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/cdefs.h>
 
 #include "string.h"
 #include "symbol_table.h"
@@ -227,35 +228,7 @@ Token get_token(Lexer *lexer) {
         }
     }
 
-    if (lexer->last_char == '>') {
-        next_char(lexer);
-        if (lexer->last_char == '=') {
-            return (Token){TOK_RELOP, RELOP_GE};
-        }
-        prev_char(lexer);
-        return (Token){TOK_RELOP, RELOP_GT};
-    }
-
-    if (lexer->last_char == '<') {
-        next_char(lexer);
-        if (lexer->last_char == '=') {
-            return (Token){TOK_RELOP, RELOP_LE};
-        } else if (lexer->last_char == '>') {
-            return (Token){TOK_RELOP, RELOP_NE};
-        }
-        prev_char(lexer);
-        return (Token){TOK_RELOP, RELOP_LT};
-    }
-
-    if (lexer->last_char == '=') {
-        next_char(lexer);
-        if (lexer->last_char == '=') {
-            return (Token){TOK_RELOP, RELOP_EQ};
-        }
-        prev_char(lexer);
-        return (Token){TOK_EQUAL};
-    }
-
+    // String literal
     if (lexer->last_char == '"' || lexer->last_char == '\'') {
         char string_literal_start = lexer->last_char;
         String str = new_string();
@@ -277,113 +250,111 @@ Token get_token(Lexer *lexer) {
         return (Token){TOK_STRING_LITERAL, st_insert(lexer->st, s)};
     }
 
-    if (lexer->last_char == '+') {
-        next_char(lexer);
-        if (lexer->last_char == '+') {
-            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_PLUS};
+    switch (lexer->last_char) {
+        case '>': {
+            next_char(lexer);
+            if (lexer->last_char == '=') {
+                return (Token){TOK_RELOP, RELOP_GE};
+            }
+            prev_char(lexer);
+            return (Token){TOK_RELOP, RELOP_GT};
         }
-        prev_char(lexer);
-        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_PLUS};
-    }
-
-    if (lexer->last_char == '-') {
-        next_char(lexer);
-        if (lexer->last_char == '-') {
-            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_MINUS};
+        case '<': {
+            next_char(lexer);
+            if (lexer->last_char == '=') {
+                return (Token){TOK_RELOP, RELOP_LE};
+            } else if (lexer->last_char == '>') {
+                return (Token){TOK_RELOP, RELOP_NE};
+            }
+            prev_char(lexer);
+            return (Token){TOK_RELOP, RELOP_LT};
         }
-        prev_char(lexer);
-        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MINUS};
-    }
-
-    if (lexer->last_char == '%') {
-        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MOD};
-    }
-
-    if (lexer->last_char == '/') {
-        next_char(lexer);
-        // comment
-        if (lexer->last_char == '/') {
-            do {
-                next_char(lexer);
-            } while (lexer->last_char != '\n' && lexer->last_char != EOF);
-            return get_token(lexer);
+        case '=': {
+            next_char(lexer);
+            if (lexer->last_char == '=') {
+                return (Token){TOK_RELOP, RELOP_EQ};
+            }
+            prev_char(lexer);
+            return (Token){TOK_EQUAL};
         }
-        prev_char(lexer);
-        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DIV};
-    }
-
-    if (lexer->last_char == '*') {
-        next_char(lexer);
-        if (lexer->last_char == '*') {
-            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_EXP};
+        case '+': {
+            next_char(lexer);
+            if (lexer->last_char == '+') {
+                return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_PLUS};
+            }
+            prev_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_PLUS};
         }
-        prev_char(lexer);
-        return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MUL};
-    }
-
-    if (lexer->last_char == '(') {
-        return (Token){TOK_L_PARAN};
-    }
-
-    if (lexer->last_char == ')') {
-        return (Token){TOK_R_PARAN};
-    }
-
-    if (lexer->last_char == '[') {
-        return (Token){TOK_L_SQUARE_BRACKET};
-    }
-
-    if (lexer->last_char == ']') {
-        return (Token){TOK_R_SQUARE_BRACKET};
-    }
-
-    if (lexer->last_char == '{') {
-        return (Token){TOK_L_BRACE};
-    }
-
-    if (lexer->last_char == '}') {
-        return (Token){TOK_R_BRACE};
-    }
-
-    // Logical operators
-    if (lexer->last_char == '&') {
-        next_char(lexer);
-        if (lexer->last_char == '&') {
-            return (Token){TOK_LOGICAL_OPERATOR, L_OP_AND};
+        case '-': {
+            next_char(lexer);
+            if (lexer->last_char == '-') {
+                return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DOUBLE_MINUS};
+            }
+            prev_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MINUS};
         }
-        prev_char(lexer);
-    }
-
-    if (lexer->last_char == '|') {
-        next_char(lexer);
-        if (lexer->last_char == '|') {
-            return (Token){TOK_LOGICAL_OPERATOR, L_OP_OR};
+        case '/': {
+            next_char(lexer);
+            // comment
+            if (lexer->last_char == '/') {
+                do {
+                    next_char(lexer);
+                } while (lexer->last_char != '\n' && lexer->last_char != EOF);
+                return get_token(lexer);
+            }
+            prev_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_DIV};
         }
-        prev_char(lexer);
-    }
-
-    if (lexer->last_char == '!') {
-        return (Token){TOK_LOGICAL_OPERATOR, L_OP_NOT};
-    }
-
-    if (lexer->last_char == ';') {
-        return (Token){TOK_SEMI_COLON};
-    }
-
-    if (lexer->last_char == ':') {
-        return (Token){TOK_COLON};
-    }
-
-    if (lexer->last_char == ',') {
-        return (Token){TOK_COMMA};
-    }
-
-    if (lexer->last_char == '.') {
-        return (Token){TOK_DOT};
-    }
-
-    if (lexer->last_char == EOF) {
-        return (Token){TOK_EOF};
+        case '*': {
+            next_char(lexer);
+            if (lexer->last_char == '*') {
+                return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_EXP};
+            }
+            prev_char(lexer);
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MUL};
+        }
+        case '%':
+            return (Token){TOK_ARITHMETIC_OPERATOR, A_OP_MOD};
+        case '(':
+            return (Token){TOK_L_PARAN};
+        case ')':
+            return (Token){TOK_R_PARAN};
+        case '[':
+            return (Token){TOK_L_SQUARE_BRACKET};
+        case ']':
+            return (Token){TOK_R_SQUARE_BRACKET};
+        case '{':
+            return (Token){TOK_L_BRACE};
+        case '}':
+            return (Token){TOK_R_BRACE};
+        case '&': {
+            next_char(lexer);
+            if (lexer->last_char == '&') {
+                return (Token){TOK_LOGICAL_OPERATOR, L_OP_AND};
+            }
+            prev_char(lexer);
+            break;
+        }
+        case '|': {
+            next_char(lexer);
+            if (lexer->last_char == '|') {
+                return (Token){TOK_LOGICAL_OPERATOR, L_OP_OR};
+            }
+            prev_char(lexer);
+            break;
+        }
+        case '!':
+            return (Token){TOK_LOGICAL_OPERATOR, L_OP_NOT};
+        case ';':
+            return (Token){TOK_SEMI_COLON};
+        case ':':
+            return (Token){TOK_COLON};
+        case ',':
+            return (Token){TOK_COMMA};
+        case '.':
+            return (Token){TOK_DOT};
+        case EOF:
+            return (Token){TOK_EOF};
     }
 
     lexer->is_error = true;
