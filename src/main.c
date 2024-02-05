@@ -217,6 +217,10 @@ int main(int argc, const char *argv[]) {
             printf(": %s", arithmetic_op_to_str(token.value));
         }
 
+        if (token.type == TOK_LOGICAL_OPERATOR) {
+            printf(": %s", logical_op_to_str(token.value));
+        }
+
         printf("\n");
     }
 
